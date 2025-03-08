@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Timestamp Extractor</title>
+    <!-- Favicon as solid color -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23ff8c00'/></svg>" type="image/svg+xml">
+    <style>
+        @font-face {
+            font-family: New;
+            src: url(Minecraft.ttf);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        /* Navigation Bar Styles */
+        nav {
+            background-color: #ff8c00;
+            color: white;
+            box-shadow: 1px 2px 5px rgba(0, 0, 0, 0.1);
+            border-radius: 20px;
+            margin: 15px auto;
+            max-width: 62%;
+            position: sticky;
+            top: 1%;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+        }
+
+        .logo {
+            font-weight: bold;
+            height: 85px;
+            display: flex;
+            align-items: center;
+        }
+
+        .logo img {
+            height: 90px;
+            width: auto;
+        }
+
+        .logo-text {
+            font-family: New;
+            color: white;
+            font-size: 2.5rem;
+            margin-left: 10px;
+            letter-spacing: 1px
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+        }
+
+        .nav-links li {
+            margin-left: 1.5rem;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            transition: opacity 0.3s;
+            cursor: pointer;
+            font-size: 21px;
+            font-style: italic;
+        }
+
+        .nav-links a:hover {
+            opacity: 0.8;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            color: #ff8c00;
+            margin-bottom: 1rem;
+            font-family: New;
+            font-size: 3rem;
+            letter-spacing: 1px;
+        }
+
+        .input-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .url-form {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        input[type="url"] {
+            flex: 1;
+            padding: 0.8rem;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1rem;
+        }
+
+        button {
+            background: #ff8c00;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #e67e00;
+        }
+
+        #loading {
+            display: none;
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 8px solid #ff8c00;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        .cta-section {
+            text-align: center;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        #timestamps {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .timestamp-item {
+            display: flex;
+            align-items: center;
+            padding: 0.8rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .timestamp-item:last-child {
+            border-bottom: none;
+        }
+
+        .timestamp-link {
+            color: #ff8c00;
+            text-decoration: none;
+            margin-right: 1rem;
+        }
+
+        .timestamp-link:hover {
+            text-decoration: underline;
+        }
+
+        .error {
+            color: #ff8c00;
+            text-align: center;
+            margin: 1rem 0;
+        }
+
+        /* Section styles */
+        /* Add fade-in animation styles */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            opacity: 0;
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+
+        .delay-1 {
+            animation-delay: 0.2s;
+        }
+
+        .delay-2 {
+            animation-delay: 0.4s;
+        }
+
+        .delay-3 {
+            animation-delay: 0.6s;
+        }
+
+        .section {
+            background: white;
+            padding: 2rem;
+            border-radius: 30px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            margin-top: 2rem;
+        }
+
+        .section h2 {
+            color: #ff8c00;
+            margin-bottom: 1rem;
+        }
+
+        /* Contact form styles */
+        .contact-form {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .contact-form input,
+        .contact-form textarea {
+            padding: 0.8rem;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1rem;
+        }
+
+        .contact-form textarea {
+            min-height: 150px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation Bar -->
+    <nav>
+        <div class="nav-container">
+            <div class="logo">
+                <img src="logo.png" alt="YT Timestamp Logo">
+                <span class="logo-text">Stampy</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Home Section -->
+        <section id="home">
+            <header>
+                <h1>Youtube Timestamp Extractor</h1>
+                <p>The Ultimate YouTube Timestamp Extractor Which Creates Life Easy For Creators!</p>
+            </header>
+
+            <div class="input-section">
+                <form id="urlForm" class="url-form">
+                    <input type="url" id="videoUrl" placeholder="Paste YouTube video URL here" required>
+                    <button type="submit">Extract Timestamps</button>
+                </form>
+            </div>
+
+            <div id="loading">
+                <div class="spinner"></div>
+                <p>Loading timestamps...</p>
+            </div>
+            <div id="error" class="error"></div>
+            <div id="timestamps"></div>
+
+            <!-- Introduction Section -->
+            <div class="section">
+                <h2>Effortlessly Extract Timestamps from YouTube Videos</h2>
+                <p>Have you ever wanted to find and save key moments from a YouTube video without manually scrubbing
+                    through the timeline? Meet Stampy—a powerful and user-friendly YouTube Timestamp Extractor that lets
+                    you instantly pull timestamps from any YouTube video.</p>
+                <p>Whether you're a content creator, researcher, or casual viewer, Stampy helps you navigate long videos
+                    with ease by extracting timestamps based on video links. Say goodbye to endless scrolling and
+                    manually noting down timestamps—Stampy does the hard work for you!</p>
+            </div>
+
+            <!-- What is Stampy Section -->
+            <div class="section">
+                <h2>What is Stampy?</h2>
+                <p>Stampy is a free online tool designed to extract timestamps from YouTube videos automatically. Just
+                    paste a YouTube video URL, and Stampy will analyze the video, providing a detailed list of
+                    timestamps based on various cues like:</p>
+                <ul class="features-list">
+                    <li>Chapter markers (if available in the video)</li>
+                    <li>Comment timestamps (user interactions)</li>
+                    <li>Key moments based on subtitles or captions</li>
+                    <li>Frame-based timestamp extraction</li>
+                </ul>
+                <p>With Stampy, you can quickly access the most important parts of any video, making it easier to
+                    reference, share, and revisit key moments.</p>
+            </div>
+
+            <!-- How it Works Section -->
+            <div class="section">
+                <h2>How Does Stampy Work?</h2>
+                <p>Using Stampy is simple and requires no technical knowledge. Follow these quick steps to extract
+                    timestamps from any YouTube video:</p>
+                <ol style="margin-left: 2rem; margin-top: 1rem;">
+                    <li><strong>Paste the YouTube Video Link</strong><br>Copy and paste the URL of the YouTube video you
+                        want to analyze.</li>
+                    <li><strong>Select Extraction Method</strong><br>Choose from different options: Chapters, Comments,
+                        Subtitles, or Frame Analysis.</li>
+                    <li><strong>Extract & View Timestamps</strong><br>Click the "Extract" button and let Stampy analyze
+                        the video.</li>
+                    <li><strong>Copy, Share, or Save</strong><br>Download the timestamps or share them directly with
+                        others.</li>
+                </ol>
+                <p>It's that easy! With Stampy, you can get accurate timestamps in seconds without watching the entire
+                    video.</p>
+            </div>
+
+            <!-- Why Use Stampy Section -->
+            <div class="section">
+                <h2>Why Use Stampy?</h2>
+                <ul class="benefits-list">
+                    <li><strong>Saves Time</strong><br>Manually finding timestamps is tedious—let Stampy do it for you
+                        in seconds!</li>
+                    <li><strong>Enhances Productivity</strong><br>Researchers, students, and professionals can quickly
+                        reference key moments in long videos without losing focus.</li>
+                    <li><strong>Content Creators & Editors Love It</strong><br>Easily identify important sections of a
+                        video to create highlights, shorts, or summaries.</li>
+                    <li><strong>Easy Sharing</strong><br>Extracted timestamps can be shared as clickable YouTube links,
+                        making it effortless for viewers to jump to specific moments.</li>
+                    <li><strong>Supports Different Extraction Methods</strong><br>From chapter markers to comment
+                        timestamps, Stampy ensures you get the most relevant moments in any video.</li>
+                </ul>
+            </div>
+
+            <!-- Key Features Section -->
+            <div class="section">
+                <h2>Key Features of Stampy</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">⚡</div>
+                        <div class="feature-title">Instant Extraction</div>
+                        <p>Just paste a YouTube link and get results in seconds.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📋</div>
+                        <div class="feature-title">Chapters & Captions</div>
+                        <p>Extract timestamps from YouTube's built-in video chapters and subtitles.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">💬</div>
+                        <div class="feature-title">Comment-Based</div>
+                        <p>See which moments people are discussing the most.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🎬</div>
+                        <div class="feature-title">Frame Analysis</div>
+                        <p>Identify key moments based on scene changes.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📤</div>
+                        <div class="feature-title">Export & Share</div>
+                        <p>Copy timestamps or download them for later use.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🆓</div>
+                        <div class="feature-title">Free & User-Friendly</div>
+                        <p>No sign-up required; completely free to use!</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Who Can Benefit Section -->
+            <div class="section">
+                <h2>Who Can Benefit from Stampy?</h2>
+                <ul class="benefits-list">
+                    <li><strong>YouTubers & Video Editors</strong> – Quickly extract timestamps for highlights, video
+                        summaries, or edits.</li>
+                    <li><strong>Students & Researchers</strong> – Find key moments in educational videos, lectures, and
+                        tutorials without rewatching.</li>
+                    <li><strong>Podcast Listeners & Reviewers</strong> – Extract timestamps for key topics and
+                        discussions.</li>
+                    <li><strong>Gamer & Sports Fans</strong> – Jump to important moments in long streams or match
+                        replays.</li>
+                    <li><strong>Anyone Who Watches YouTube!</strong> – Save time and instantly access the moments that
+                        matter most.</li>
+                </ul>
+            </div>
+
+            <!-- CTA Section -->
+            <div class="cta-section">
+                <h2>Start Extracting Timestamps Instantly!</h2>
+                <p>Don't waste time scrubbing through long YouTube videos. Use Stampy to extract timestamps instantly
+                    and navigate videos like a pro.</p>
+                <a href="#home" class="cta-button">Try it now!</a>
+            </div>
+        </section>
+
+        <!-- About Section -->
+        <section id="about" class="section">
+            <h2>About Stampy</h2>
+            <p>Stampy is a free tool that helps you extract and organize timestamps from YouTube videos. It scans both
+                the video description and comments to find timestamps, making it easy to navigate through long videos.
+            </p>
+
+            <div style="margin-top: 2rem;">
+                <h3 style="color: #ff8c00; margin-bottom: 1rem;">How Stampy Helps Different Users</h3>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <h4 style="color: #ff8c00; margin-bottom: 0.5rem;">🎥 For Content Creators</h4>
+                    <p>If you're a YouTuber, Stampy helps you find and organize key moments in your videos, making it
+                        easier to create highlights, timestamps for descriptions, or social media clips.</p>
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <h4 style="color: #ff8c00; margin-bottom: 0.5rem;">📚 For Researchers & Students</h4>
+                    <p>Watching long educational videos? Use Stampy to extract timestamps from lectures, tutorials, and
+                        interviews, so you can jump directly to relevant sections without wasting time.</p>
+                </div>
+
+                <div>
+                    <h4 style="color: #ff8c00; margin-bottom: 0.5rem;">💬 For Reviewers & Commentators</h4>
+                    <p>Want to analyze viral videos or long interviews? Stampy makes it easy to identify the most
+                        talked-about moments by extracting timestamps from video comments.</p>
+                </div>
+            </div>
+
+            <div style="margin-top: 2rem;">
+                <h3 style="color: #ff8c00; margin-bottom: 1rem;">Frequently Asked Questions</h3>
+
+                <div class="faq-item">
+                    <div class="faq-question">1. Is Stampy free to use?</div>
+                    <div class="faq-answer">Yes! Stampy is completely free to use, and no sign-up is required.</div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">2. Does Stampy work on all YouTube videos?</div>
+                    <div class="faq-answer">Stampy works on most public YouTube videos. However, it may not work on
+                        private, age-restricted, or copyrighted videos.</div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">3. Can I download the extracted timestamps?</div>
+                    <div class="faq-answer">Yes! You can copy and save the extracted timestamps in a text file or export
+                        them for later use.</div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">4. What are the different timestamp extraction methods?</div>
+                    <div class="faq-answer">
+                        Stampy extracts timestamps from:<br>
+                        - YouTube Chapters (if available)<br>
+                        - User Comments that contain timestamps<br>
+                        - Subtitles/Captions (to find key dialogue moments)<br>
+                        - Frame-based analysis (for scene changes)
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">5. Can I share the extracted timestamps?</div>
+                    <div class="faq-answer">Absolutely! Stampy provides clickable YouTube timestamp links that you can
+                        easily share.</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section id="contact" class="section">
+            <h2>Contact Us</h2>
+            <p>Have questions, suggestions, or feedback? Feel free to reach out to us using the form below.</p>
+            <br>
+            <form class="contact-form">
+                <input type="text" placeholder="Your Name" required>
+                <input type="email" placeholder="Your Email" required>
+                <input type="text" placeholder="Subject">
+                <textarea placeholder="Your Message" required></textarea>
+                <button type="submit">Send Message</button>
+            </form>
+        </section>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+    <script>
+        // Handle contact form submission (prevent page reload)
+        document.querySelector('.contact-form')?.addEventListener('submit', function (e) {
+            e.preventDefault();
+            alert('Thank you for your message! We will get back to you soon.');
+            this.reset();
+        });
+
+        // Scroll-triggered fade-in animation
+        document.addEventListener('DOMContentLoaded', function () {
+            // Add fade-in class to elements we want to animate
+            const elementsToAnimate = document.querySelectorAll('.section, h1, .input-section, header p, .features-list li, .benefits-list li, .faq-item');
+
+            elementsToAnimate.forEach(element => {
+                // Set initial state - invisible
+                element.style.opacity = "0";
+                element.classList.add('fade-in');
+
+                // Add staggered delay for grouped elements
+                if (element.parentElement &&
+                    (element.parentElement.classList.contains('features-list') ||
+                        element.parentElement.classList.contains('benefits-list'))) {
+                    const index = Array.from(element.parentElement.children).indexOf(element);
+                    element.style.animationDelay = `${0.2 * index}s`;
+                }
+            });
+
+            // Function to check if element is in viewport and trigger animation
+            function checkVisibility() {
+                const elements = document.querySelectorAll('.fade-in');
+                const windowHeight = window.innerHeight;
+
+                elements.forEach(element => {
+                    const position = element.getBoundingClientRect();
+
+                    // If element is in viewport (with offset to start animation before fully visible)
+                    if (position.top < windowHeight * 0.85) {
+                        // Start the animation by setting opacity to 1
+                        element.style.opacity = "1";
+                    }
+                });
+            }
+
+            // Initial check on page load
+            checkVisibility();
+
+            // Check on scroll
+            window.addEventListener('scroll', checkVisibility);
+        });
+    </script>
+</body>
+
+</html>
